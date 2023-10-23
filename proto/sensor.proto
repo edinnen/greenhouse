@@ -1,0 +1,14 @@
+syntax = "proto3";
+
+option go_package = "github.com/dehaass/cmd/pb";
+
+message Reading {
+    string sensor = 1;
+    float value = 2;
+}
+
+message Configure {
+    string sensor = 1;
+    uint32 parent = 2;
+    uint32 type = 3;
+}

@@ -1,0 +1,63 @@
+syntax = "proto3";
+
+option go_package = "github.com/dehaass/cmd/pb";
+
+message State {
+    bool lights = 1;
+    float brightnessPercent1 = 2;
+    float brightnessPercent2 = 3;
+    uint32 lightsLast = 4;
+    float temperature = 5;
+    float humidity = 6;
+    float soilCapacitance = 7;
+    int64 timestamp = 8;
+    bool wateredToday = 9;
+    Timing lightsTiming = 10;
+    bool recirculationFan = 11;
+    uint32 recirculationFanLast = 12;
+    bool ventFan = 13;
+    uint32 ventFanLast = 14;
+    bool ventOverridden = 15;
+    uint32 wateredLast = 16;
+    bool lightsOverridden = 17;
+    float rampPercentage = 18;
+    float maxAutomationBrightness = 19;
+    int32 deviceID = 20;
+}
+
+message Timing {
+    Timestamp start = 1;
+    Timestamp end = 2;
+}
+
+message Timestamp {
+    // Represents seconds of number of seconds since the beginning of the current day
+    int64 seconds = 1;
+  
+    // Non-negative fractions of a second at nanosecond resolution. Negative
+    // second values with fractions must still have non-negative nanos values
+    // that count forward in time. Must be from 0 to 999,999,999
+    // inclusive.
+    int32 nanos = 2;
+}
+
+message Timeseries {
+    repeated State states = 1;
+}
+
+message TimeseriesRequest {
+    int64 from = 1;
+    int64 to = 2;
+    int32 deviceID = 3;
+}
+
+message WaterRequest {
+    int32 deviceID = 2;
+}
+
+service Greenhouse {
+    rpc GetState(State) returns (State) {}
+    rpc SetState(State) returns (State) {}
+    rpc Watered(WaterRequest) returns (WaterRequest) {}
+    rpc GetTimeseries(TimeseriesRequest) returns (Timeseries) {}
+}

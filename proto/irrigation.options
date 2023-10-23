@@ -1,0 +1,2 @@
+Irrigator.solenoids max_count:5
+Irrigator.weatherData max_size:50000

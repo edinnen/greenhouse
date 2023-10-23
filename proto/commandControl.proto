@@ -1,0 +1,61 @@
+syntax = "proto3";
+
+option go_package = "github.com/dehaass/cmd/pb";
+
+message Devices {
+  repeated Device adopted = 1;
+  repeated Device orphaned = 2;
+}
+
+message Device {
+    enum Type {
+        UNKNOWN = 0;
+        GREENHOUSE = 1;
+        IRRIGATION = 2;
+        SENSOR = 3;
+    }
+    string name = 1;
+    Type type = 2;
+    string ip = 3;
+    string mac = 4;
+    bool adopted = 5;
+    int32 zone = 6;
+    int32 id = 7;
+}
+
+message Zone {
+    int32 id = 1;
+    string name = 2;
+    repeated Device devices = 3;
+}
+
+message Zones {
+    repeated Zone zones = 1;
+}
+
+message LoginRequest {
+    string password = 1;
+}
+  
+message LoginResponse {
+    string jwt = 1;
+    string expiry = 2;
+    bool success = 3;
+}
+
+message ZoneRequest {
+    int32 zone = 1;
+}
+
+message None {}
+
+service CommandControl {
+    rpc Login(LoginRequest) returns (LoginResponse);
+    rpc GetDevices(None) returns (Devices);
+    rpc UpdateDevice(Device) returns (None);
+    rpc CreateZone(Zone) returns (Zones);
+    rpc UpdateZone(Zone) returns (Zone);
+    rpc DeleteZone(Zone) returns (None);
+    rpc GetZones(None) returns (Zones);
+    rpc GetZone(ZoneRequest) returns (Zone);
+}

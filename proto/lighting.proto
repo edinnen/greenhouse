@@ -1,0 +1,19 @@
+syntax = "proto3";
+
+option go_package = "github.com/dehaass/cmd/pb";
+
+message Light {
+    bool powered = 1;
+    Type type = 2;
+    uint32 color = 3;
+}
+
+enum Type {
+    RGB = 0;
+    RGBW = 1;
+}
+
+service Lighting {
+    rpc SetState(Light) returns (Light) {}
+    rpc GetState(Light) returns (Light) {}
+}

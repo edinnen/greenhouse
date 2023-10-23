@@ -1,0 +1,39 @@
+syntax = "proto3";
+option go_package = "github.com/dehaass/cmd/pb";
+
+message Solenoid {
+    enum State {
+        OFF = 0;
+        ON = 1;
+    }
+    State state = 1;
+    int32 pin = 2;
+    bool override = 3;
+    int32 litresToDispense = 4;
+    float lengthOfSoakerHose = 5;
+    float litresDispensed = 6;
+    int32 lastOverridden = 7;
+}
+
+message Irrigator {
+    int32 id = 1;
+    repeated Solenoid solenoids = 2;
+    int64 lastWatered = 3;
+    int64 timestamp = 4;
+    bool rainLockout = 5;
+    int64 lastLockout = 6;
+    bool irrigating = 7;
+    float temperature = 8;
+    int64 timing = 9;
+}
+
+message IrrigationRequest {
+    int32 id = 1;
+}
+
+message EmptyMessage {}
+
+service Irrigation {
+    rpc GetState(IrrigationRequest) returns (Irrigator) {}
+    rpc SetState(Irrigator) returns (Irrigator) {}
+}

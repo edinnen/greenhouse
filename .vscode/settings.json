@@ -1,0 +1,15 @@
+{
+    "protoc": {
+        "path": "/usr/local/bin/protoc",
+        "compile_on_save": true,
+        "options": [
+            "--go_out=cmd/pb",
+            "--go_opt=paths=source_relative",
+            "--go-grpc_out=cmd/pb",
+            "--go-grpc_opt=paths=source_relative",
+            "--proto_path=${workspaceRoot}/proto",
+            "--js_out=import_style=commonjs,binary:frontend/src/proto",
+            "--grpc-web_out=import_style=typescript,mode=grpcwebtext:frontend/src/proto",
+        ]
+    }
+}
