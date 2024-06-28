@@ -1,12 +1,13 @@
 import { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
-import { Devices, Zone } from 'proto/commandControl_pb';
+import { Device, Devices, Zone } from 'proto/commandControl_pb';
 import { Container, Typography, Paper, Box, IconButton } from '@mui/material';
 import { getZone, getDevices, updateDevice, getComponentForDevice } from '../../utils';
-import { CommandControlClient } from 'proto/CommandControlServiceClientPb';
 import { AdoptDevice } from '../../components';
+import { CommandControlClient } from 'proto/CommandControlServiceClientPb';
 import { GreenhouseClient } from 'proto/GreenhouseServiceClientPb';
 import { IrrigationClient } from 'proto/IrrigationServiceClientPb';
+import { CoopClient } from 'proto/CoopServiceClientPb';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import ReplayIcon from '@mui/icons-material/Replay';
 
@@ -14,9 +15,10 @@ export interface ZoneProps {
     commandControlClient: CommandControlClient;
     greenhouseClient: GreenhouseClient;
     irrigationClient: IrrigationClient;
+    coopClient: CoopClient;
 }
 
-export default function ZoneContainer({ commandControlClient, greenhouseClient, irrigationClient }: ZoneProps) {
+export default function ZoneContainer({ commandControlClient, greenhouseClient, irrigationClient, coopClient }: ZoneProps) {
     const { id } = useParams();
     const [zone, setZone] = useState<Zone>();
     const [devices, setDevices] = useState<Devices>();
@@ -45,7 +47,7 @@ export default function ZoneContainer({ commandControlClient, greenhouseClient, 
             return;
         };
 
-        const device = devices?.getOrphanedList().find(d => d.getName() === deviceName);
+        const device = devices?.getOrphanedList().find((d: { getName: () => string; }) => d.getName() === deviceName);
         if (!device) {
             setAdopting(false);
             return;
@@ -73,11 +75,11 @@ export default function ZoneContainer({ commandControlClient, greenhouseClient, 
                 </Box>
             </Box>
 
-            {zone && devices?.getAdoptedList().map((device, index) => {
+            {zone && devices?.getAdoptedList().map((device: Device, index: any) => {
                 if (device.getZone() !== zone.getId()) return null;
                 return (
                     <Paper elevation={1} style={{ backgroundColor: "rgb(34, 39, 46)", border: "1px solid rgb(55, 62, 71)", margin: 10, paddingTop: 20 }} key={index}>
-                        {getComponentForDevice(device, commandControlClient, greenhouseClient, irrigationClient)}
+                        {getComponentForDevice(device, commandControlClient, greenhouseClient, irrigationClient, coopClient)}
                     </Paper>
                 );
             })}

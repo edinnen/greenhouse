@@ -31,7 +31,7 @@ export default function Slider({ title, value, onChange, disabled, min, max, def
                     </Typography>
                 </Box>
                 <Box style={{ paddingLeft: 20, paddingRight: 20 }}>
-                    <MuiSlider min={min || 10} max={max || 100} defaultValue={defaultVal || 10} value={valueState} aria-label={title} valueLabelDisplay="auto" onChange={handleChange} onChangeCommitted={onChange} disabled={disabled} />
+                    <MuiSlider min={min} max={max || 100} defaultValue={defaultVal} value={valueState} aria-label={title} valueLabelDisplay="auto" onChange={handleChange} onChangeCommitted={onChange} disabled={disabled} />
                 </Box>
             </Paper>
         </Container>

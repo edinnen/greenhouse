@@ -74,6 +74,7 @@ export namespace Device {
     GREENHOUSE = 1,
     IRRIGATION = 2,
     SENSOR = 3,
+    CHICKENCOOP = 4,
   }
 }
 

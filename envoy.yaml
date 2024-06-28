@@ -37,6 +37,12 @@ static_resources:
               - match:
                   safe_regex:
                     google_re2: {}
+                    regex: ^/Coop.*
+                route:
+                  cluster: greenhouse_grpc
+              - match:
+                  safe_regex:
+                    google_re2: {}
                     regex: ^/Irrigation.*
                 route:
                   cluster: greenhouse_grpc

@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-option go_package = "github.com/dehaass/cmd/pb";
+option go_package = "github.com/edinnen/greenHouse/cmd/pb";
 
 message Devices {
   repeated Device adopted = 1;
@@ -13,6 +13,7 @@ message Device {
         GREENHOUSE = 1;
         IRRIGATION = 2;
         SENSOR = 3;
+        CHICKENCOOP = 4;
     }
     string name = 1;
     Type type = 2;

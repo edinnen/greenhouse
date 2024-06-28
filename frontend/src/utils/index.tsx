@@ -2,9 +2,11 @@ import * as grpcWeb from 'grpc-web';
 import { CommandControlClient } from 'proto/CommandControlServiceClientPb';
 import { Devices, LoginRequest, LoginResponse, None, Zone, Zones, ZoneRequest, Device } from 'proto/commandControl_pb';
 import Greenhouse from 'containers/Greenhouse';
+import Irrigation from 'containers/Irrigation';
+import Coop from 'containers/Coop';
 import { GreenhouseClient } from 'proto/GreenhouseServiceClientPb';
 import { IrrigationClient } from 'proto/IrrigationServiceClientPb';
-import Irrigation from 'containers/Irrigation';
+import { CoopClient } from 'proto/CoopServiceClientPb';
 
 export function typeNameFromID(id: number): string {
     switch (id) {
@@ -19,7 +21,7 @@ export function typeNameFromID(id: number): string {
     }
 }
 
-export function getComponentForDevice(device: Device, commandControlClient: CommandControlClient, greenhouseClient: GreenhouseClient, irrigationClient: IrrigationClient): JSX.Element {
+export function getComponentForDevice(device: Device, commandControlClient: CommandControlClient, greenhouseClient: GreenhouseClient, irrigationClient: IrrigationClient, coopClient: CoopClient): JSX.Element {
     switch (device.getType()) {
         case 1:
             return <Greenhouse greenhouseClient={greenhouseClient} device={device} />;
@@ -27,6 +29,8 @@ export function getComponentForDevice(device: Device, commandControlClient: Comm
             return <Irrigation irrigationClient={irrigationClient} device={device} />;
         // case 3:
         //     return <Sensor device={device} />;
+        case 4:
+            return <Coop coopClient={coopClient} device={device} />;
         default:
             return <div>Unknown device type</div>;
     }

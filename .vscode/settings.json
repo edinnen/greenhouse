@@ -1,6 +1,7 @@
 {
     "protoc": {
-        "path": "/usr/local/bin/protoc",
+
+        "path": "/opt/homebrew/bin/protoc",
         "compile_on_save": true,
         "options": [
             "--go_out=cmd/pb",

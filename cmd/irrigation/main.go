@@ -12,7 +12,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/dehaass/greenHouse/cmd/pb"
+	"github.com/edinnen/greenhouse/cmd/pb"
 	"github.com/sirupsen/logrus"
 	"google.golang.org/protobuf/proto"
 )

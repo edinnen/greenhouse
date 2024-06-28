@@ -1,4 +1,4 @@
-package greenhouse
+package coop
 
 import (
 	"fmt"
@@ -14,10 +14,10 @@ import (
 
 var STORAGE_PATH = os.Getenv("STORAGE_PATH")
 
-func (greenhouse *Greenhouse) InitializeDB() {
-	greenhouse.DatabaseMutex.Lock()
-	defer greenhouse.DatabaseMutex.Unlock()
-	database, err := sqlx.Open("sqlite3", fmt.Sprintf("%s/%s.db", STORAGE_PATH, strings.Split(greenhouse.Device.Name, ".")[0]))
+func (coop *Coop) InitializeDB() {
+	coop.DatabaseMutex.Lock()
+	defer coop.DatabaseMutex.Unlock()
+	database, err := sqlx.Open("sqlite3", fmt.Sprintf("%s/%s.db", STORAGE_PATH, strings.Split(coop.Device.Name, ".")[0]))
 	if err != nil {
 		logrus.Error("Failed to open SQL database", err)
 		database.Close()
@@ -29,10 +29,10 @@ func (greenhouse *Greenhouse) InitializeDB() {
 	database.MustExec("CREATE TABLE IF NOT EXISTS watered (timestamp DATETIME)")
 }
 
-func (greenhouse *Greenhouse) GetLastState() *pb.State {
-	greenhouse.DatabaseMutex.Lock()
-	defer greenhouse.DatabaseMutex.Unlock()
-	database, err := sqlx.Open("sqlite3", fmt.Sprintf("%s/%s.db", STORAGE_PATH, strings.Split(greenhouse.Device.Name, ".")[0]))
+func (coop *Coop) GetLastState() *pb.CoopState {
+	coop.DatabaseMutex.Lock()
+	defer coop.DatabaseMutex.Unlock()
+	database, err := sqlx.Open("sqlite3", fmt.Sprintf("%s/%s.db", STORAGE_PATH, strings.Split(coop.Device.Name, ".")[0]))
 	if err != nil {
 		logrus.Error("Failed to open SQL database", err)
 		database.Close()
@@ -56,7 +56,7 @@ func (greenhouse *Greenhouse) GetLastState() *pb.State {
 		}
 	}
 
-	var statePb pb.State
+	var statePb pb.CoopState
 	if err := proto.Unmarshal(state, &statePb); err != nil {
 		logrus.Error("Failed to unmarshal state", err)
 		return nil
@@ -65,10 +65,10 @@ func (greenhouse *Greenhouse) GetLastState() *pb.State {
 	return &statePb
 }
 
-func (greenhouse *Greenhouse) StoreState(state *pb.State) {
-	greenhouse.DatabaseMutex.Lock()
-	defer greenhouse.DatabaseMutex.Unlock()
-	database, err := sqlx.Open("sqlite3", fmt.Sprintf("%s/%s.db", STORAGE_PATH, strings.Split(greenhouse.Device.Name, ".")[0]))
+func (coop *Coop) StoreState(state *pb.CoopState) {
+	coop.DatabaseMutex.Lock()
+	defer coop.DatabaseMutex.Unlock()
+	database, err := sqlx.Open("sqlite3", fmt.Sprintf("%s/%s.db", STORAGE_PATH, strings.Split(coop.Device.Name, ".")[0]))
 	if err != nil {
 		logrus.Error("Failed to open SQL database", err)
 		database.Close()
@@ -85,10 +85,10 @@ func (greenhouse *Greenhouse) StoreState(state *pb.State) {
 	database.MustExec("INSERT INTO state (state, timestamp) VALUES (?, ?)", bytes, time.Now())
 }
 
-func (greenhouse *Greenhouse) SetWatered() {
-	greenhouse.DatabaseMutex.Lock()
-	defer greenhouse.DatabaseMutex.Unlock()
-	database, err := sqlx.Open("sqlite3", fmt.Sprintf("%s/%s.db", STORAGE_PATH, strings.Split(greenhouse.Device.Name, ".")[0]))
+func (coop *Coop) SetWatered() {
+	coop.DatabaseMutex.Lock()
+	defer coop.DatabaseMutex.Unlock()
+	database, err := sqlx.Open("sqlite3", fmt.Sprintf("%s/%s.db", STORAGE_PATH, strings.Split(coop.Device.Name, ".")[0]))
 	if err != nil {
 		logrus.Error("Failed to open SQL database", err)
 		database.Close()
@@ -125,10 +125,10 @@ func (greenhouse *Greenhouse) SetWatered() {
 	database.MustExec("INSERT INTO watered (timestamp) VALUES (?)", time.Now())
 }
 
-func (greenhouse *Greenhouse) CheckWateredToday() (bool, uint32) {
-	greenhouse.DatabaseMutex.Lock()
-	defer greenhouse.DatabaseMutex.Unlock()
-	database, err := sqlx.Open("sqlite3", fmt.Sprintf("%s/%s.db", STORAGE_PATH, strings.Split(greenhouse.Device.Name, ".")[0]))
+func (coop *Coop) CheckWateredToday() (bool, uint32) {
+	coop.DatabaseMutex.Lock()
+	defer coop.DatabaseMutex.Unlock()
+	database, err := sqlx.Open("sqlite3", fmt.Sprintf("%s/%s.db", STORAGE_PATH, strings.Split(coop.Device.Name, ".")[0]))
 	if err != nil {
 		logrus.Error("Failed to open SQL database", err)
 		return false, 0
@@ -164,13 +164,13 @@ func (greenhouse *Greenhouse) CheckWateredToday() (bool, uint32) {
 	return false, 0
 }
 
-func (greenhouse *Greenhouse) GetTimeseriesFromDB(from time.Time, to time.Time) (*pb.Timeseries, error) {
-	greenhouse.DatabaseMutex.Lock()
-	defer greenhouse.DatabaseMutex.Unlock()
-	database, err := sqlx.Open("sqlite3", fmt.Sprintf("%s/%s.db", STORAGE_PATH, strings.Split(greenhouse.Device.Name, ".")[0]))
+func (coop *Coop) GetTimeseriesFromDB(from time.Time, to time.Time) (*pb.CoopTimeseries, error) {
+	coop.DatabaseMutex.Lock()
+	defer coop.DatabaseMutex.Unlock()
+	database, err := sqlx.Open("sqlite3", fmt.Sprintf("%s/%s.db", STORAGE_PATH, strings.Split(coop.Device.Name, ".")[0]))
 	if err != nil {
 		database.Close()
-		return &pb.Timeseries{}, err
+		return &pb.CoopTimeseries{}, err
 	}
 	defer database.Close()
 
@@ -179,22 +179,22 @@ func (greenhouse *Greenhouse) GetTimeseriesFromDB(from time.Time, to time.Time) 
 	if err != nil {
 		logrus.Error("Failed to query state", err)
 		rows.Close()
-		return &pb.Timeseries{}, err
+		return &pb.CoopTimeseries{}, err
 	}
 	defer rows.Close()
 
-	timeseries := pb.Timeseries{}
+	timeseries := pb.CoopTimeseries{}
 	for rows.Next() {
 		var state []byte
 		if err := rows.Scan(&state); err != nil {
 			logrus.Error("Failed to scan state", err)
-			return &pb.Timeseries{}, err
+			return &pb.CoopTimeseries{}, err
 		}
 
-		var statePb pb.State
+		var statePb pb.CoopState
 		if err := proto.Unmarshal(state, &statePb); err != nil {
 			logrus.Error("Failed to unmarshal state", err)
-			return &pb.Timeseries{}, err
+			return &pb.CoopTimeseries{}, err
 		}
 		timeseries.States = append(timeseries.States, &statePb)
 	}

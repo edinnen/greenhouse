@@ -1,5 +1,5 @@
 syntax = "proto3";
-option go_package = "github.com/dehaass/cmd/pb";
+option go_package = "github.com/edinnen/greenHouse/cmd/pb";
 
 message Solenoid {
     enum State {

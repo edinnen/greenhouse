@@ -7,17 +7,20 @@ import * as serviceWorkerRegistration from './serviceWorkerRegistration';
 import reportWebVitals from './reportWebVitals';
 import CssBaseline from '@mui/material/CssBaseline';
 import { ThemeProvider } from '@mui/material/styles';
-import { GreenhouseClient } from 'proto/GreenhouseServiceClientPb';
-import { CommandControlClient } from 'proto/CommandControlServiceClientPb';
 import { Routes, Route, BrowserRouter } from 'react-router-dom';
+
+import { CommandControlClient } from 'proto/CommandControlServiceClientPb';
+import { GreenhouseClient } from 'proto/GreenhouseServiceClientPb';
+import { IrrigationClient } from 'proto/IrrigationServiceClientPb';
+import { CoopClient } from 'proto/CoopServiceClientPb';
 import theme from './theme';
 import './index.css';
-import { IrrigationClient } from 'proto/IrrigationServiceClientPb';
 
 const BASE_URL = "https://greenhouse.dinnen.engineering";
 const greenhouseClient = new GreenhouseClient(BASE_URL);
 const commandControlClient = new CommandControlClient(BASE_URL);
 const irrigationClient = new IrrigationClient(BASE_URL);
+const coopClient = new CoopClient(BASE_URL);
 
 ReactDOM.render(
   <BrowserRouter>
@@ -27,7 +30,7 @@ ReactDOM.render(
         <Route path="/" element={<Dashboard commandControlClient={commandControlClient} />} />
         <Route path="/login" element={<Login commandControlClient={commandControlClient} />} />
         {/* <Route path="/zone/:id" element={<Greenhouse greenhouseClient={greenhouseClient} commandControlClient={commandControlClient} />} /> */}
-        <Route path="/zone/:id" element={<Zone commandControlClient={commandControlClient} greenhouseClient={greenhouseClient} irrigationClient={irrigationClient} />} />
+        <Route path="/zone/:id" element={<Zone commandControlClient={commandControlClient} greenhouseClient={greenhouseClient} irrigationClient={irrigationClient} coopClient={coopClient} />} />
       </Routes>
     </ThemeProvider>
   </BrowserRouter>,

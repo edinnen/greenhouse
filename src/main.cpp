@@ -25,3 +25,17 @@ void loop() {
   irrigation.loop();
 }
 #endif
+
+#ifdef IS_COOP
+#include <Coop.h>
+Coop coop;
+
+void setup() {
+  coop.init();
+}
+
+void loop() {
+  coop.loop();
+}
+
+#endif

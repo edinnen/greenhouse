@@ -1,0 +1,66 @@
+syntax = "proto3";
+
+option go_package = "github.com/edinnen/greenHouse/cmd/pb";
+
+message CoopState {
+    bool lights = 1;
+    float brightness = 2;
+    uint32 red = 3;
+    uint32 green = 4;
+    uint32 blue = 5;
+    uint32 white = 6;
+    uint32 lightsLast = 7;
+    float temperature = 8;
+    float humidity = 9;
+    float gatePosition = 10;
+    int64 timestamp = 11;
+    bool wateredToday = 12;
+    CoopTiming lightsTiming = 13;
+    bool recirculationFan = 14;
+    uint32 recirculationFanLast = 15;
+    bool ventFan = 16;
+    uint32 ventFanLast = 17;
+    bool ventOverridden = 18;
+    uint32 wateredLast = 19;
+    bool lightsOverridden = 20;
+    float rampPercentage = 21;
+    float maxAutomationBrightness = 22;
+    int32 deviceID = 23;
+}
+
+message CoopTiming {
+    CoopTimestamp start = 1;
+    CoopTimestamp end = 2;
+}
+
+message CoopTimestamp {
+    // Represents seconds of number of seconds since the beginning of the current day
+    int64 seconds = 1;
+  
+    // Non-negative fractions of a second at nanosecond resolution. Negative
+    // second values with fractions must still have non-negative nanos values
+    // that count forward in time. Must be from 0 to 999,999,999
+    // inclusive.
+    int32 nanos = 2;
+}
+
+message CoopTimeseries {
+    repeated CoopState states = 1;
+}
+
+message CoopTimeseriesRequest {
+    int64 from = 1;
+    int64 to = 2;
+    int32 deviceID = 3;
+}
+
+message CoopWaterRequest {
+    int32 deviceID = 2;
+}
+
+service Coop {
+    rpc GetCoopState(CoopState) returns (CoopState) {}
+    rpc SetCoopState(CoopState) returns (CoopState) {}
+    rpc CoopWatered(CoopWaterRequest) returns (CoopWaterRequest) {}
+    rpc GetCoopTimeseries(CoopTimeseriesRequest) returns (CoopTimeseries) {}
+}

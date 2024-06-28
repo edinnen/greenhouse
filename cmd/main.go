@@ -16,11 +16,11 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/dehaass/greenHouse/cmd/exploitBlock"
-	"github.com/dehaass/greenHouse/cmd/greenhouse"
-	"github.com/dehaass/greenHouse/cmd/irrigation"
-	"github.com/dehaass/greenHouse/cmd/pb"
 	"github.com/dgrijalva/jwt-go"
+	"github.com/edinnen/greenhouse/cmd/coop"
+	"github.com/edinnen/greenhouse/cmd/greenhouse"
+	"github.com/edinnen/greenhouse/cmd/irrigation"
+	"github.com/edinnen/greenhouse/cmd/pb"
 	"github.com/grandcat/zeroconf"
 	_ "github.com/mattn/go-sqlite3"
 	"github.com/sirupsen/logrus"
@@ -244,6 +244,8 @@ func (s *CommandControlServer) UpdateDevice(ctx context.Context, in *pb.Device) 
 		go greenhouse.Initialize(in)
 	case pb.Device_IRRIGATION:
 		go irrigation.Initialize(in)
+	case pb.Device_CHICKENCOOP:
+		go coop.Initialize(in)
 	// case pb.Device_SENSOR:
 	// 	s.WaitGroup.Add(1)
 	// 	go sensor.Initialize(s.WaitGroup, in)
@@ -359,8 +361,8 @@ func startFrontend(wg *sync.WaitGroup) {
 	http.DefaultClient.Timeout = 10 * time.Second
 
 	root := http.FileServer(http.Dir("/var/www/greenhouse"))
-	http.Handle("/", exploitBlock.Protect(http.StripPrefix("/", root)))
-	http.Handle("/login", exploitBlock.Protect(http.StripPrefix("/login", root)))
+	http.Handle("/", http.StripPrefix("/", root)) // exploitBlock.Protect(...) can be used here to protect the route
+	http.Handle("/login", http.StripPrefix("/login", root))
 	logrus.Info("Frontend service initialized!")
 
 	// frameChan := make(chan *bytes.Buffer)
@@ -406,6 +408,7 @@ func rpcServer(devices *pb.Devices, ctx context.Context) {
 	pb.RegisterCommandControlServer(s, &CommandControlServer{})
 	greenhouseRegistered := false
 	irrigationRegistered := false
+	coopRegistered := false
 	for _, device := range devices.Adopted {
 		switch device.Type {
 		case pb.Device_GREENHOUSE:
@@ -417,6 +420,11 @@ func rpcServer(devices *pb.Devices, ctx context.Context) {
 			go irrigation.Initialize(device)
 			if !irrigationRegistered {
 				pb.RegisterIrrigationServer(s, &irrigation.IrrigationServer{})
+			}
+		case pb.Device_CHICKENCOOP:
+			go coop.Initialize(device)
+			if !coopRegistered {
+				pb.RegisterCoopServer(s, &coop.CoopServer{})
 			}
 		}
 	}

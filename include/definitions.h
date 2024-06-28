@@ -3,17 +3,28 @@
 #include <cmath>
 
 /**
- * Pin definitions
+ * Greenhouse Pin definitions
  */
 #define LED_SSR_PIN 21
 #define LED_DIMMER_ZONE_1 14
 #define LED_DIMMER_ZONE_2 32
-#define RECIRCULATION_FAN_PIN 15
-#define VENT_FAN_PIN 33
-#define PUMP_PIN 33
-#define DHT_PIN 4 // A5
+#define RECIRCULATION_FAN_PIN 27
+#define VENT_FAN_PIN 21
+#define DHT_PIN A5 // A5
 #define CAPACITIVE_PIN A3
 #define ONE_WIRE_BUS 5 // sck
+
+/**
+ * @brief Coop Pin definitions
+ */ 
+#define LED_DATA_PIN 12
+#define LED_COUNT 59
+#define GATE_PIN 32
+#define FAN_ON_TEMP 23
+#define FAN_OFF_TEMP 22
+// #define DHT_PIN 4 // A5
+// #define CAPACITIVE_PIN A3
+// #define ONE_WIRE_BUS 5 // sck
 
 /**
  * Sensor definitions

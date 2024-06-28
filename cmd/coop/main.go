@@ -1,4 +1,4 @@
-package greenhouse
+package coop
 
 import (
 	"bytes"
@@ -15,20 +15,20 @@ import (
 	"google.golang.org/protobuf/proto"
 )
 
-type Greenhouse struct {
+type Coop struct {
 	Mutex         *sync.Mutex
 	DatabaseMutex *sync.Mutex
 	Device        *pb.Device
-	State         *pb.State
+	State         *pb.CoopState
 	Context       context.Context
 	LastWatered   time.Time
 }
 
-type GreenhouseServer struct {
-	pb.UnimplementedGreenhouseServer
+type CoopServer struct {
+	pb.UnimplementedCoopServer
 }
 
-var Greenhouses []*Greenhouse
+var Coops []*Coop
 
 func RecoverOnPanic(functionName string) {
 	if r := recover(); r != nil {
@@ -38,46 +38,46 @@ func RecoverOnPanic(functionName string) {
 }
 
 func Initialize(device *pb.Device) {
-	greenhouse := &Greenhouse{
+	coop := &Coop{
 		Device:        device,
 		Mutex:         &sync.Mutex{},
 		DatabaseMutex: &sync.Mutex{},
 	}
-	greenhouse.InitializeDB()
-	Greenhouses = append(Greenhouses, greenhouse)
-	logrus.Info("Initializing greenhouse!")
-	go greenhouse.BackgroundUpdate()
+	coop.InitializeDB()
+	Coops = append(Coops, coop)
+	logrus.Info("Initializing coop!")
+	go coop.BackgroundUpdate()
 }
 
-func (greenhouse *Greenhouse) BackgroundUpdate() {
+func (coop *Coop) BackgroundUpdate() {
 	// Ensure we restart the background update loop if we panic
 	defer func() {
 		if r := recover(); r != nil {
 			logrus.Errorf("Recovered from panic in backgroundUpdate! %v", r)
 			logrus.Info("Restarting backgroundUpdate...")
-			go greenhouse.BackgroundUpdate()
+			go coop.BackgroundUpdate()
 		}
 	}()
 
 	for {
-		state, err := greenhouse.MakeGetStateRequest()
+		state, err := coop.MakeGetStateRequest()
 		if err != nil {
 			logrus.Error("Failed to get background state update")
 			time.Sleep(1 * time.Minute)
 			continue
 		}
-		greenhouse.State = state
-		greenhouse.StoreState(state)
+		coop.State = state
+		coop.StoreState(state)
 		time.Sleep(15 * time.Second)
 	}
 }
 
-func (greenhouse *Greenhouse) MakeGetStateRequest() (*pb.State, error) {
-	greenhouse.Mutex.Lock()
-	defer greenhouse.Mutex.Unlock()
+func (coop *Coop) MakeGetStateRequest() (*pb.CoopState, error) {
+	coop.Mutex.Lock()
+	defer coop.Mutex.Unlock()
 
-	// Make a GET request to uC's /GetState endpoint
-	req, err := http.NewRequest("GET", fmt.Sprintf("http://%s:6969/GetState", greenhouse.Device.Ip), nil)
+	// Make a GET request to uC's /GetCoopState endpoint
+	req, err := http.NewRequest("GET", fmt.Sprintf("http://%s:6969/GetCoopState", coop.Device.Ip), nil)
 	if err != nil {
 		logrus.Errorf("Error creating request: %v", err)
 		return nil, err
@@ -101,7 +101,7 @@ func (greenhouse *Greenhouse) MakeGetStateRequest() (*pb.State, error) {
 	}
 
 	// Unmarshal the response into a protobuf message
-	state := &pb.State{}
+	state := &pb.CoopState{}
 	err = proto.Unmarshal(bodyBytes, state)
 	if err != nil {
 		logrus.Errorf("Error unmarshalling: %v", err)
@@ -111,18 +111,18 @@ func (greenhouse *Greenhouse) MakeGetStateRequest() (*pb.State, error) {
 	return state, nil
 }
 
-func (greenhouse *Greenhouse) MakeSetStateRequest(request *pb.State) (*pb.State, error) {
+func (coop *Coop) MakeSetStateRequest(request *pb.CoopState) (*pb.CoopState, error) {
 	defer RecoverOnPanic("makeSetStateRequest")
-	greenhouse.Mutex.Lock()
-	defer greenhouse.Mutex.Unlock()
-	// Send request to greenhouse
+	coop.Mutex.Lock()
+	defer coop.Mutex.Unlock()
+	// Send request to coop
 	data, err := proto.Marshal(request)
 	if err != nil {
 		logrus.Errorf("Error marshalling: %v", err)
 		return nil, err
 	}
 
-	req, err := http.NewRequest("POST", fmt.Sprintf("http://%s:6969/SetState", greenhouse.Device.Ip), bytes.NewBuffer(data))
+	req, err := http.NewRequest("POST", fmt.Sprintf("http://%s:6969/SetCoopState", coop.Device.Ip), bytes.NewBuffer(data))
 	if err != nil {
 		logrus.Errorf("Error creating request: %v", err)
 		return nil, err
@@ -146,32 +146,32 @@ func (greenhouse *Greenhouse) MakeSetStateRequest(request *pb.State) (*pb.State,
 	}
 
 	// Unmarshal response into protobuf message
-	state := &pb.State{}
+	state := &pb.CoopState{}
 	err = proto.Unmarshal(bodyBytes, state)
 	if err != nil {
 		logrus.Errorf("Error unmarshalling: %v", err)
 		return nil, err
 	}
 
-	greenhouse.StoreState(state)
+	coop.StoreState(state)
 	return state, nil
 }
 
-func findGreenhouse(id int32) *Greenhouse {
-	for _, greenhouse := range Greenhouses {
-		if greenhouse.Device.Id == id {
-			return greenhouse
+func findCoop(id int32) *Coop {
+	for _, coop := range Coops {
+		if coop.Device.Id == id {
+			return coop
 		}
 	}
 	return nil
 }
 
-func (greenhouse *GreenhouseServer) GetState(ctx context.Context, in *pb.State) (*pb.State, error) {
-	defer RecoverOnPanic("GetState")
+func (coop *CoopServer) GetCoopState(ctx context.Context, in *pb.CoopState) (*pb.CoopState, error) {
+	defer RecoverOnPanic("GetCoopState")
 
-	gh := findGreenhouse(in.DeviceID)
+	gh := findCoop(in.DeviceID)
 	if gh == nil {
-		return nil, fmt.Errorf("could not find greenhouse with id %d", in.DeviceID)
+		return nil, fmt.Errorf("could not find coop with id %d", in.DeviceID)
 	}
 
 	state, err := gh.MakeGetStateRequest()
@@ -186,12 +186,12 @@ func (greenhouse *GreenhouseServer) GetState(ctx context.Context, in *pb.State) 
 	return state, nil
 }
 
-func (greenhouse *GreenhouseServer) SetState(ctx context.Context, request *pb.State) (*pb.State, error) {
+func (coop *CoopServer) SetCoopState(ctx context.Context, request *pb.CoopState) (*pb.CoopState, error) {
 	defer RecoverOnPanic("SetState")
 
-	gh := findGreenhouse(request.DeviceID)
+	gh := findCoop(request.DeviceID)
 	if gh == nil {
-		return nil, fmt.Errorf("could not find greenhouse with id %d", request.DeviceID)
+		return nil, fmt.Errorf("could not find coop with id %d", request.DeviceID)
 	}
 
 	state, err := gh.MakeSetStateRequest(request)
@@ -205,43 +205,45 @@ func (greenhouse *GreenhouseServer) SetState(ctx context.Context, request *pb.St
 	return state, nil
 }
 
-func (greenhouse *GreenhouseServer) GetTimeseries(ctx context.Context, request *pb.TimeseriesRequest) (*pb.Timeseries, error) {
+func (coop *CoopServer) GetCoopTimeseries(ctx context.Context, request *pb.CoopTimeseriesRequest) (*pb.CoopTimeseries, error) {
 	defer RecoverOnPanic("GetTimeseries")
 
-	gh := findGreenhouse(request.DeviceID)
-	if gh == nil {
-		return nil, fmt.Errorf("could not find greenhouse with id %d", request.DeviceID)
-	}
+	return nil, nil
+	// gh := findCoop(request.DeviceID)
+	// if gh == nil {
+	// 	return nil, fmt.Errorf("could not find coop with id %d", request.DeviceID)
+	// }
 
-	gh.Mutex.Lock()
-	defer gh.Mutex.Unlock()
+	// gh.Mutex.Lock()
+	// defer gh.Mutex.Unlock()
 
-	from := time.Unix(request.GetFrom(), 0)
-	to := time.Unix(request.GetTo(), 0)
+	// from := time.Unix(request.GetFrom(), 0)
+	// to := time.Unix(request.GetTo(), 0)
 
-	logrus.WithFields(logrus.Fields{"From": from, "To": to}).Info("Getting timeseries")
-	timeseries, err := gh.GetTimeseriesFromDB(from, to)
-	logrus.WithFields(logrus.Fields{"Count": len(timeseries.States)}).Info("Found matching timeseries data")
-	if err != nil {
-		logrus.Errorf("Error getting timeseries: %v", err)
-		return nil, err
-	}
+	// logrus.WithFields(logrus.Fields{"From": from, "To": to}).Info("Getting timeseries")
+	// timeseries, err := gh.GetTimeseriesFromDB(from, to)
+	// logrus.WithFields(logrus.Fields{"Count": len(timeseries.States)}).Info("Found matching timeseries data")
+	// if err != nil {
+	// 	logrus.Errorf("Error getting timeseries: %v", err)
+	// 	return nil, err
+	// }
 
-	return timeseries, nil
+	// return timeseries, nil
 }
 
-func (greenhouse *GreenhouseServer) Watered(ctx context.Context, request *pb.WaterRequest) (*pb.WaterRequest, error) {
-	defer RecoverOnPanic("Watered")
+func (coop *CoopServer) CoopWatered(ctx context.Context, request *pb.CoopWaterRequest) (*pb.CoopWaterRequest, error) {
+	defer RecoverOnPanic("CoopWatered")
 
-	gh := findGreenhouse(request.DeviceID)
-	if gh == nil {
-		return nil, fmt.Errorf("could not find greenhouse with id %d", request.DeviceID)
-	}
+	return nil, nil
+	// gh := findCoop(request.DeviceID)
+	// if gh == nil {
+	// 	return nil, fmt.Errorf("could not find coop with id %d", request.DeviceID)
+	// }
 
-	gh.Mutex.Lock()
-	defer gh.Mutex.Unlock()
+	// gh.Mutex.Lock()
+	// defer gh.Mutex.Unlock()
 
-	gh.SetWatered()
-	gh.LastWatered = time.Now()
-	return request, nil
+	// gh.SetWatered()
+	// gh.LastWatered = time.Now()
+	// return request, nil
 }

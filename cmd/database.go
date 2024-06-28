@@ -6,7 +6,7 @@ import (
 	"os"
 	"sync"
 
-	"github.com/dehaass/greenHouse/cmd/pb"
+	"github.com/edinnen/greenhouse/cmd/pb"
 	"github.com/jmoiron/sqlx"
 	"github.com/sirupsen/logrus"
 )
@@ -34,6 +34,7 @@ func InitializeDB() {
 	database.MustExec("INSERT OR IGNORE INTO device_types (id, name, description) VALUES (1, 'Greenhouse', 'A greenhouse instance')")
 	database.MustExec("INSERT OR IGNORE INTO device_types (id, name, description) VALUES (2, 'Irrigator', 'An irrigation system')")
 	database.MustExec("INSERT OR IGNORE INTO device_types (id, name, description) VALUES (3, 'Sensor', 'A generic sensor')")
+	database.MustExec("INSERT OR IGNORE INTO device_types (id, name, description) VALUES (4, 'Chicken Coop', 'A chicken coop')")
 
 	database.MustExec("CREATE TABLE IF NOT EXISTS devices (id INTEGER PRIMARY KEY, name TEXT, type INTEGER, ip TEXT, mac TEXT, adopted INTEGER, zone INTEGER, FOREIGN KEY(type) REFERENCES device_types(id), FOREIGN KEY(zone) REFERENCES zones(id))")
 	database.MustExec("CREATE TABLE IF NOT EXISTS zones (id INTEGER PRIMARY KEY, name TEXT)")

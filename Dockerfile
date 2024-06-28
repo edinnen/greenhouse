@@ -1,6 +1,8 @@
-FROM golang:latest as build
+FROM golang:latest AS build
 
-RUN apt-get update -y && apt-get install -y \
+RUN apt-get update -y
+
+RUN apt-get install -y \
   build-essential \
   cmake \
   git \
@@ -8,7 +10,9 @@ RUN apt-get update -y && apt-get install -y \
   dnsutils \
   python3 \
   python3-venv \
-  libaugeas0
+  libaugeas0 \
+  libc6 \
+  libc6-amd64-cross
 
 RUN python3 -m venv /opt/certbot
 RUN /opt/certbot/bin/pip install --upgrade pip
@@ -21,8 +25,8 @@ VOLUME /etc/letsencrypt
 RUN curl -fsSL https://deb.nodesource.com/setup_18.x | bash -
 RUN apt-get install -y nodejs
 
-RUN mkdir -p /go/src/github.com/dehaass/greenHouse
-COPY . /go/src/github.com/dehaass/greenHouse
+RUN mkdir -p /go/src/github.com/edinnen/greenHouse
+COPY . /go/src/github.com/edinnen/greenHouse
 
 RUN mkdir -p /var/www/greenhouse && mkdir -p /var/greenhouse
 COPY ./frontend /var/greenhouse/
@@ -30,11 +34,11 @@ WORKDIR /var/greenhouse
 RUN npm install && npm run build
 RUN cp -r build/* /var/www/greenhouse
 
-WORKDIR /go/src/github.com/dehaass/greenHouse/cmd
+WORKDIR /go/src/github.com/edinnen/greenHouse/cmd
 
 RUN go build -o $GOPATH/bin/greenhouse .
 
-FROM envoyproxy/envoy:v1.24-latest
+FROM envoyproxy/envoy:v1.30-latest
 
 COPY --from=build /go/bin/greenhouse /usr/local/bin/greenhouse
 COPY --from=build /var/www/greenhouse /var/www/greenhouse
